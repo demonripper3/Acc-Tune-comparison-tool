@@ -34,11 +34,20 @@ def calculate_ticks(differences):
                     if abs(change_in_ticks) > cheat_threshold:
                         print(f"CHEAT WARNING: {key} changed by more than {cheat_threshold} ticks!")
 
+def check_car_model(json1, json2, car_key='carName'):
+    if json1.get(car_key) != json2.get(car_key):
+        print(f"Warning: The car models do not match: {json1.get(car_key)} vs {json2.get(car_key)}")
+        return False
+    return True
+
 def compare_json_files(file1, file2):
     keys_to_remove = ['staticCamber', 'toeOutLinear', 'fuelPerLap', 'rodLength', 'strategy']
     
     json1 = remove_keys(load_json(file1), keys_to_remove)
     json2 = remove_keys(load_json(file2), keys_to_remove)
+
+    if not check_car_model(json1, json2):
+        return None
 
     return DeepDiff(json1, json2, ignore_order=True, significant_digits=3)
 
@@ -51,8 +60,11 @@ def main():
 
     differences = compare_json_files(file1, file2)
 
-    print("Differences in Ticks:")
-    calculate_ticks(differences)
+    if differences is not None:
+        print("Differences in Ticks:")
+        calculate_ticks(differences)
+    else:
+        print("Comparison aborted due to mismatched car models.")
 
     input("Press Enter to exit...")  # This line will keep the terminal open
 
